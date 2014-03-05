@@ -26,12 +26,17 @@
 **/
 -->
 <apex:page controller="MetadataRetrieveController" action="{!init}" sidebar="false">
+	<apex:includeScript value="{!URLFOR($Resource.jszip, '/jszip.js')}"/>
+	<apex:includeScript value="{!URLFOR($Resource.jszip, '/jszip-load.js')}"/>
+	<apex:includeScript value="{!URLFOR($Resource.jszip, '/jszip-deflate.js')}"/>
+	<apex:includeScript value="{!URLFOR($Resource.jszip, '/jszip-inflate.js')}"/>	
     <apex:form id="form" >
         <apex:sectionHeader title="Metadata Retrieve Demo"/>
         <apex:pageMessages id="messages"/>
         <apex:actionPoller action="{!checkAsyncRequest}" interval="5" rerender="form" rendered="{!NOT(ISNULL(AsyncResult))}"/>
         <apex:pageBlock title="Layouts" rendered="{!AND(ISNULL(AsyncResult),ISNULL(MetaDataRetrieveZip))}">
             <apex:pageBlockButtons >
+                <apex:commandButton value="List" action="{!listMetadataItems}" />
                 <apex:commandButton value="Retrieve" action="{!retrieveMetadataItem}" />
             </apex:pageBlockButtons>
             <apex:pageBlockSection columns="1">
@@ -42,6 +47,10 @@
                         <apex:actionSupport event="onchange"  action="{!listMetadataItems}"/> 
                     </apex:selectList>
                 </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Metadata Folder" />
+                    <apex:inputText value="{!MetaDataFolder}" /> 
+                </apex:pageBlockSectionItem>                
                 <apex:pageBlockSectionItem >
                     <apex:outputLabel value="Metadata Item:" />
                     <apex:selectList size="1" value="{!MetaDataItem}" >

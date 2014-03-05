@@ -32,6 +32,7 @@ public with sharing class MetadataRetrieveController
 	public List<SelectOption> MetaDataTypes {get; set;}
 	public String MetaDataType {get; set;}		
 	public List<SelectOption> MetaDataItems {get; set;}
+	public String MetaDataFolder {get; set;} 
 	public String MetaDataItem {get; set;}	
 	public String MetadataFileName {get; set;}
 	public String MetadataFileData {get; set;}
@@ -42,7 +43,7 @@ public with sharing class MetadataRetrieveController
 	public PageReference init()
 	{
 		// List available Metadata Types via the 'describeMetadata' API call
-		MetadataService.MetadataPort service = MetadataServiceExamples.createService();					
+		MetadataService.MetadataPort service = createService();					
 		MetadataService.DescribeMetadataResult describeResult = service.describeMetadata(26);
 		List<String> metadataTypeNames = new List<String>();
 		for(MetadataService.DescribeMetadataObject metadataObject : describeResult.metadataObjects)
@@ -75,6 +76,7 @@ public with sharing class MetadataRetrieveController
 		MetadataService.MetadataPort service = createService();				
 		List<MetadataService.ListMetadataQuery> queries = new List<MetadataService.ListMetadataQuery>();		
 		MetadataService.ListMetadataQuery queryLayout = new MetadataService.ListMetadataQuery();
+		queryLayout.folder = MetaDataFolder;
 		queryLayout.type_x = MetaDataType;
 		queries.add(queryLayout);		
 		MetadataService.FileProperties[] fileProperties = service.listMetadata(queries, 25);

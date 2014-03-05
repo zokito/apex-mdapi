@@ -1,12 +1,47 @@
-Apex Wrapper for Salesforce Metadata API
-========================================
+Apex Wrapper Salesforce Metadata API
+====================================
 
-**Update: 11th November:**
+**[Deploy to Salesforce](https://githubsfdeploy.herokuapp.com/app/githubdeploy/financialforcedev/apex-mdapi)**
+
+**Update: 27th October 2013:**
+- A new introduction to the API has been published [here](http://andyinthecloud.com/2013/10/27/introduction-to-calling-the-metadata-api-from-apex/)
+- A new supporting Visualforce example has also been created to show how to use apex:actionPoller
+
+**Update: 30th August 2013:**
+- Very interesting fix for the 'delete' CRUD operation (for fields), see this StackExchange [answer](http://salesforce.stackexchange.com/questions/15902/how-to-dynamically-set-type-x-value-for-metadata-customfield/15913#15913) for more and the MetadataServiceExamples.deleteField method
+
+**Update: 20th June 2013:**
+- Updated to **Summer'13 Metadata API (v28.0)**, more cool stuff to follow on this, such an Apex package installer UI!
+
+**Update: 6th May 2013:**
+- Updated MetadataCreateJob.cls, new feature to process Metadata API requests in Batch Apex, see examples.
+
+**Update: 5th May 2013:**
+- Updated MetadataServiceTest.cls, now provides 100% code coverage of MetadataService.cls!
+
+**Update: 10th March 2013:**
+- Updated to **Spring'13 Metadata API (v27.0)**, more info on new features of this version [here](http://developer.force.com/releases/release/Spring13/Bulk+Metadata+and+Streaming+API+Updates). Also added new samples for Settings configuraiton, see blog [here](http://andyinthecloud.com/2013/03/10/apex-metadata-api-spring13-update-org-settings-access).
+
+**Update: 3rd March 2013:**
+- Updated MetadataServiceExample.cls with more sample code creating various field types.
+
+**Update: 11th November 2012:**
 - Updated the Retrieve Demo to utilise 'describeMetadata' API call to allow the user to select which Metadata Type to list and retrieve.
 - Added 'Metadata Explore' demo (see below) a Sencha powered demo of 'describeMetadata' and 'listMetadata' API's
 
-Background
------------
+
+Known Issues and Resolutions
+----------------------------
+
+- If you recieve the error message *'Insufficient access; cannot execute Metadata operation with PAC enabled session id'* within Apex code within a managed package utilising this library. Please ensure to changed the API access from Restricted to Unrestricted on your Package defintion. Many thanks to the great work from [vipulpahwa](https://github.com/vipulpahwa) and [Daniel Blackhall](https://github.com/seeflat) to getting to the bottom of this rather cryptic error message.
+
+Introduction 
+------------
+
+There is a good blog entry providing an introduction to this library [here](http://andyinthecloud.com/2013/10/27/introduction-to-calling-the-metadata-api-from-apex/)
+
+Background and Motivation
+-------------------------
 
 There seems to be a growing number of Apex developers wanting to develop solutions or just handy utils that embrace the declarative nature of the platform. Including those in FinancialForce.com for that matter! Such solutions are dynamically adapting to custom fields or objects that need to be created by the administrator and/or customisations to objects in existing packages.
 
@@ -37,10 +72,10 @@ The main reasons are as follows...
 * The Apex language does not support the Zip file format, so the **retrieve** and the **deploy** operations so these are a no go from a pure Apex perspective. However this doesnt stop the of Javascript to handle zips! See sections below on how this has been done.
 * Most operations return **AsyncResult** which gives you an Id to call back on to determine the fate of your request. While this can be called, you will need to do this via AJAX, Apex Future or Apex Job. The deploy and retrieve samples utilise apex:actionPoller.
 
-So once we resolve these issues and with a splash of AJAX and Javascript we can now get access to the Metadata API from Apex!
+So once these issues are resolved we can now get access to the Metadata API from Apex!
 
-* The following so called CRUD operations appear useable (though I have only tested a subset so far) within Apex, **create**, **update** and **delete**. 
-* As well as **listMetadata** and **describeMetadata** (though you may well hit a heap issue here in large orgs). 
+* The following so called CRUD operations are useable within Apex, **create**, **update** and **delete**. 
+* As well as **listMetadata** and **describeMetadata**. 
 * You can also call **checkStatus** to check the status of your requests. 
 * With a bit of help from a Javascript library, the infamous **retrieve** and **deploy** also become workable.
 
@@ -57,7 +92,7 @@ Links
 Examples
 --------
 
-**NOTE:** The following examples do not show how to call the checkStatus method. This will need to be done in your Visualforce controller via a timed refresh or via a scheduled job. See the following Retrieve and Deploy demos for how to use apex:actionPoller for this.
+**NOTE:** The following examples do not show how to call the checkStatus method. This will need to be done in your Visualforce controller via a timed refresh or via a scheduled job. See the following Retrieve and Deploy demos for how to use apex:actionPoller for this or the Batch Apex demo.
 
 	public static void createObject()
 	{
@@ -120,6 +155,67 @@ Examples
 	}
 
 You can view more examples [here](https://github.com/financialforcedev/apex-mdapi/blob/master/apex-mdapi/src/classes/MetadataServiceExamples.cls). Thanks to [mohit-address](https://github.com/mohit-address) for submitting examples relating to updating picklist values.
+
+Metadata Visualforce Demo
+-------------------------
+
+If you have an interactive tool your building, you can use Visualforce and use the **apex:actionPoller** to store the AsyncResult in your controller and write a controller method to call the checkStatus, which the action poller repeatedly calls until the AsyncResult indicates the request is completed by Salesforce. You can read more about this sample in this blog [here](http://andyinthecloud.com/2013/10/27/introduction-to-calling-the-metadata-api-from-apex/).
+
+![Visualforce Demo](http://i.stack.imgur.com/OxQUc.png)
+![Visualforce Demo](http://i.stack.imgur.com/x5pYJ.png)
+![Visualforce Demo](http://i.stack.imgur.com/toecI.png)
+
+Metadata Batch Apex Demo
+------------------------
+
+As described above you can poll the checkStatus operation for completion via either apex:actionPoller or Batch Apex. This example code shows how to create a number of Metadata components (custom object, fields and a page) from Apex without requiring Visualforce. You can read more about it [here](http://andyinthecloud.com/2013/05/06/scripting-the-apex-metadata-api-and-batch-apex-support/)
+
+		// Define Metadata item to create a Custom Object
+		MetadataService.CustomObject customObject = new MetadataService.CustomObject();
+		customObject.fullName = objectName + '__c';
+		customObject.label = objectName;
+		customObject.pluralLabel = objectName+'s';
+		customObject.nameField = new MetadataService.CustomField();
+		customObject.nameField.type_x = 'Text';
+		customObject.nameField.label = 'Test Record';
+		customObject.deploymentStatus = 'Deployed';
+		customObject.sharingModel = 'ReadWrite';
+		
+		// Define Metadata item to create a Custom Field on the above object
+		MetadataService.CustomField customField1 = new MetadataService.CustomField();
+		customField1.fullName = objectName+'__c.TestField1__c';
+		customField1.label = 'Test Field 1';
+		customField1.type_x = 'Text';
+		customField1.length = 42;
+
+		// Define Metadata item to create a Custom Field on the above object
+		MetadataService.CustomField customField2 = new MetadataService.CustomField();
+		customField2.fullName = objectName+'__c.TestField2__c';
+		customField2.label = 'Test Field 2';
+		customField2.type_x = 'Text';
+		customField2.length = 42;
+		
+		// Define Metadata item to create a Visualforce page to display the above field
+		MetadataService.ApexPage apexPage = new MetadataService.ApexPage();
+		apexPage.apiVersion = 25;
+		apexPage.fullName = objectName.toLowercase();
+		apexPage.label = objectName + ' Page';
+		apexPage.content = EncodingUtil.base64Encode(Blob.valueOf(
+			'<apex:page standardController=\''+objectName+'__c\'>'+
+				'{!' + objectName + '__c.TestField1__c}' +
+				'{!' + objectName + '__c.TestField2__c}' + 
+			'</apex:page>'));
+		
+		// Pass the Metadata items to the job for processing, indicating any dependencies
+		MetadataCreateJob.run(
+			new List<MetadataCreateJob.Item> { 
+					new MetadataCreateJob.Item(customObject),					
+					new MetadataCreateJob.Item(customField1, null, true), // Set wait to true, to process after object creation
+					new MetadataCreateJob.Item(customField2),  
+					new MetadataCreateJob.Item(apexPage, null, true) // Set wait to true, to process after field creation
+				},
+			new MetadataCreateJob.EmailNotificationMetadataAsyncCallback());				
+
 
 Metadata Retrieve Demo
 ----------------------
@@ -227,18 +323,24 @@ If you want to repeat what I did on new version of the Metadata WSDL or just wan
      - Generating a valid Apex MetadataService class
           - Edit the WSDL
                - Change the Port name from 'Metadata' to 'MetadataPort'
+               - As of Summer'13 (API 28) there was a small bug in the CustomField type definition, change the 'type' element definition to include a minOccurs="0" atttribute, as per the other elements in this type.
           - Attempt to generate Apex from this WSDL
                - Give it a better name if you want when prompted, e.g. MetadataService
-               - It will error with unexpected name 'update'…. 
-               - At this stage copy paste the Apex code from the browser
+               - In earlier platform releases this would error, as update and delete are reserved words.
+               - It seems this has now been fixed and as of Summer'13 the Metadata API WSDL generates without errors!
           - Open Eclipse (or your favourite editor)
-               - Paste in the code
-               - Edit the method name update to updateMetadata
-               - Edit the method name delete to deleteMetadata
-               - Upload to server and confirm its saved
+               - Open the class
+               - To be compatible with the samples here, edit the method name update_x to updateMetadata
+               - To be compatible with the samples here, edit the method name delete_x to deleteMetadata
+               - To be compatible with the samples here, edit the method name retrieve_x to retrieve
+               - Save the class
+          - Update the MetadataServiceText class
+               - Observe the uncovered items (new metadata operations, types added since last release)          
+               - Add new code to cover operations and types
+               - See this for guidelines http://andyinthecloud.com/2013/05/11/code-coverage-for-wsdl2apex-generated-classes
      - Making further edits to the Apex code
           - Modify the end point to be dynamic
-               - public String endpoint_x = URL.getSalesforceBaseUrl().toExternalForm() + '/services/Soap/m/25.0';
+               - public String endpoint_x = URL.getSalesforceBaseUrl().toExternalForm() + '/services/Soap/m/28.0';
           - Make 'Metadata' inner class 'virtual'
           - Make 'MetadataWithContent' inner class 'virtual'
           - Review WSDL for types that extend 'tns:Metadata' and update related Apex classes to also extend Metadata

@@ -1,5 +1,7 @@
+build-new-org.properties
 .idea
 *.iml
+
 #################
 ## Eclipse
 #################
